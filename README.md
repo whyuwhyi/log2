@@ -62,17 +62,16 @@ S0: Input Filtering and Special Value Handling
     - Zero detection → return -Inf
     - Subnormal number handling
 
-S1: Exponent Extraction and Normalization
+S1: Exponent Extraction and Mantissa Decomposition 
     - Extract exponent E from FP32 representation
     - Convert E to FP32 format for later addition
-    - Normalize mantissa M = 1.xxxxx...
-
-S2: Mantissa Decomposition and LUT Access
     - Split mantissa: M_high (top 7 bits) and M_low (bottom 16 bits)
+    - Convert M_low to FP32 format
+
+S2: LUT Access
     - LUT lookup using M_high as index:
       - log_base = log₂(1 + M_high)
       - inv = 1 / (1 + M_high)
-    - Convert M_low to FP32 format
 
 S3: Normalized Residual Calculation (3 FP multiply stages)
     - r = M_low × inv
