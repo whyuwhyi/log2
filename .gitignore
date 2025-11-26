@@ -1,0 +1,6 @@
+build/
+out/
+.nvim
+.nvim/
+EDA_tool
+EDA_tool/*
