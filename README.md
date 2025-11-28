@@ -1,10 +1,10 @@
-# LG2FP32 - Hardware Logarithm Function Implementation
+# LOG2FP32 - Hardware Logarithm Function Implementation
 
 A high-performance hardware implementation of the base-2 logarithm function (log₂) for single-precision floating-point numbers (FP32), designed using Chisel HDL.
 
 ## Overview
 
-This project implements **LG2FP32**, which computes `log₂(x)` for FP32 inputs using a pipelined architecture that combines lookup tables (LUT) and polynomial approximation to achieve efficient hardware implementation with high accuracy.
+This project implements **LOG2FP32**, which computes `log₂(x)` for FP32 inputs using a pipelined architecture that combines lookup tables (LUT) and polynomial approximation to achieve efficient hardware implementation with high accuracy.
 
 This project reuses the **XiangShan Fudian** floating-point unit library for basic FP32 arithmetic operations (multiplication, addition, fused multiply-add).
 
@@ -153,29 +153,25 @@ This will initialize the XiangShan Fudian submodule.
 ### Generate SystemVerilog
 
 ```bash
-# Generate LG2FP32 RTL
-./mill --no-server LG2FP32.run
+# Generate LOG2FP32 RTL
+./mill --no-server LOG2FP32.run
 ```
 
-The generated SystemVerilog will be placed in `rtl/LG2FP32.sv`.
+The generated SystemVerilog will be placed in `rtl/LOGFP32.sv`.
 
 ### Build and Run Simulation
 
-#### CPU Reference (no GPU required)
-
 ```bash
-make USE_GPU_REF=0 run
+make run
 ```
 
-Uses standard C library `log2f()` function as the reference.
+The build system automatically detects CUDA availability:
 
-#### GPU Reference (requires NVIDIA GPU + CUDA)
-
-```bash
-make USE_GPU_REF=1 run
-```
-
-Uses NVIDIA CUDA intrinsics with `-use_fast_math` flag for higher performance and hardware-accurate reference.
+- **Without CUDA**: Uses CPU reference only (standard C library `log2f()`)
+- **With CUDA**: Uses both CPU and GPU references simultaneously
+  - CPU Reference: Standard C library `log2f()`
+  - GPU Reference: NVIDIA CUDA math library with `-use_fast_math` flag
+  - Both error statistics are computed and displayed for comparison
 
 ### Clean Build Artifacts
 
@@ -189,7 +185,7 @@ make clean
 
 Verilator-based testbench with:
 
-- Comprehensive test vector generation (1M+ test cases)
+- Comprehensive test vector generation (1M test cases)
 - Random input generation across full FP32 range
 - Special value testing (NaN, Inf, zero, negative numbers, subnormals)
 - ULP (Unit in Last Place) error measurement
@@ -197,14 +193,18 @@ Verilator-based testbench with:
 
 ### Reference Models
 
-- **CPU Reference**: Standard C library (`log2f`)
-- **GPU Reference**: NVIDIA CUDA math library (recommended for accuracy validation)
+The testbench automatically uses available reference implementations:
+
+- **CPU Reference**: Standard C library (`log2f`) - always available
+- **GPU Reference**: NVIDIA CUDA math library with `-use_fast_math` - automatically enabled if CUDA is detected
+
+When both references are available, error statistics are computed against both to provide comprehensive verification.
 
 ### Accuracy Metrics
 
 - **ULP Error**: Measures floating-point accuracy in terms of "units in the last place"
-- **Absolute Error**: Direct numerical difference between result and reference
-- **Pass/Fail**: Comparison against acceptable error threshold
+- **Relative Error**: Standard floating-point error metrics
+- **Pass/Fail**: Bit-exact comparison against reference implementation
 
 ## Future Improvements
 

@@ -4,7 +4,7 @@ import chisel3.util._
 import fudian.{FCMA_ADD_s1, FCMA_ADD_s2, FMUL_s1, FMUL_s2, FMUL_s3, FMULToFADD, RawFloat}
 import fudian.utils.Multiplier
 
-object LG2FP32Parameters {
+object LOG2FP32Parameters {
   val C0     = "h00000000".U(32.W)  // 0.0
   val C1     = "h3FB8AA3B".U(32.W)  // log₂(e) ≈ 1.442695
   val C2     = "hBF38AA3B".U(32.W)  // -log₂(e)/2 ≈ -0.721348
@@ -14,7 +14,7 @@ object LG2FP32Parameters {
   val NEGINF = "hFF800000".U(32.W)  // -inf
 }
 
-object LG2FP32Utils {
+object LOG2FP32Utils {
   implicit class DecoupledPipe[T <: Data](val decoupledBundle: DecoupledIO[T]) extends AnyVal {
     def handshakePipeIf(en: Boolean): DecoupledIO[T] = {
       if (en) {
@@ -38,7 +38,7 @@ object LG2FP32Utils {
   }
 }
 
-import LG2FP32Utils._
+import LOG2FP32Utils._
 
 class ADDFP32[T <: Bundle](ctrlSignals: T) extends Module {
   val expWidth  = 8
@@ -374,13 +374,13 @@ class FilterFP32[T <: Bundle](ctrlSignals: T) extends Module {
 
   val bypassVal = Wire(UInt(32.W))
   when (isNaN || isNeg) {
-    bypassVal := LG2FP32Parameters.NAN
+    bypassVal := LOG2FP32Parameters.NAN
   }.elsewhen (isInfPos) {
-    bypassVal := LG2FP32Parameters.POSINF
+    bypassVal := LOG2FP32Parameters.POSINF
   }.elsewhen (isZero) {
-    bypassVal := LG2FP32Parameters.NEGINF
+    bypassVal := LOG2FP32Parameters.NEGINF
   }.otherwise {
-    bypassVal := LG2FP32Parameters.ZERO
+    bypassVal := LOG2FP32Parameters.ZERO
   }
 
   val s1     = Wire(Decoupled(new OutBundle))
@@ -396,7 +396,7 @@ class FilterFP32[T <: Bundle](ctrlSignals: T) extends Module {
   io.out <> s1Pipe
 }
 
-class LG2FP32 extends Module {
+class LOG2FP32 extends Module {
   class InBundle extends Bundle {
     val in = UInt(32.W)
     val rm = UInt(3.W)
@@ -486,8 +486,8 @@ class LG2FP32 extends Module {
   mul0.io.out.ready                := cma0.io.in.ready
   cma0.io.in.valid                 := mul0.io.out.valid
   cma0.io.in.bits.a                := mul0.io.out.bits.result
-  cma0.io.in.bits.b                := LG2FP32Parameters.C2
-  cma0.io.in.bits.c                := LG2FP32Parameters.C1
+  cma0.io.in.bits.b                := LOG2FP32Parameters.C2
+  cma0.io.in.bits.c                := LOG2FP32Parameters.C1
   cma0.io.in.bits.rm               := mul0.io.out.bits.ctrl.rm
   cma0.io.in.bits.ctrl.rm          := mul0.io.out.bits.ctrl.rm
   cma0.io.in.bits.ctrl.bypass      := mul0.io.out.bits.ctrl.bypass
@@ -541,9 +541,9 @@ class LG2FP32 extends Module {
   io.out <> sOutPipe
 }
 
-object LG2FP32Gen extends App {
+object LOG2FP32Gen extends App {
   ChiselStage.emitSystemVerilogFile(
-    new LG2FP32,
+    new LOG2FP32,
     Array("--target-dir","rtl"),
     Array("-lowering-options=disallowLocalVariables")
   )

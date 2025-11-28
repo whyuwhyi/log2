@@ -28,7 +28,7 @@ object fudian extends HasChisel {
 
 }
 
-object LG2FP32 extends HasChisel {
+object LOG2FP32 extends HasChisel {
   override def sources = T.sources(os.pwd / "src" / "scala")
   override def resources = T.sources(os.pwd / "src" / "resources")
 
